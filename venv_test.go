@@ -52,3 +52,23 @@ func Test_FindSrcDir(t *testing.T) {
 		t.Fatal("Expect", expect, "was", dir)
 	}
 }
+
+func Test_AppendEnvList(t *testing.T) {
+	p := path.Join("blub", "blubber")
+	err := os.Setenv("TESTING", p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p2 := path.Join("bu", "hhhh")
+	err = AppendEnvList("TESTING", p2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := os.Getenv("TESTING")
+	expect := p + string(os.PathListSeparator) + p2
+	if expect != r {
+		t.Fatal("Expect", expect, "was", r)
+	}
+}

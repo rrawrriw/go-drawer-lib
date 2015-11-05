@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 var (
@@ -17,8 +16,12 @@ func FindSrcDir(start string) (string, error) {
 
 	tmp := filepath.ToSlash(start)
 	tmp = filepath.Clean(tmp)
+	tmp, err := filepath.Abs(tmp)
+	if err != nil {
+		return "", err
+	}
 
-	src, err := find(strings.Split(tmp, string(os.PathSeparator)))
+	src, err := find(tmp)
 	if err != nil {
 		return "", err
 	}
@@ -32,23 +35,22 @@ func FindSrcDir(start string) (string, error) {
 
 }
 
-func find(p []string) (string, error) {
-	if len(p) == 0 {
+func find(p string) (string, error) {
+	if len(p) == 1 && p == string(os.PathSeparator) {
 		return "", NoSrc
 	}
 
-	currPath := filepath.Join(p...)
-	infos, err := ioutil.ReadDir(currPath)
+	infos, err := ioutil.ReadDir(p)
 	if err != nil {
 		return "", err
 	}
 
 	r := isSrc(infos)
 	if r {
-		return currPath, nil
+		return p, nil
 	}
 
-	return find(p[0 : len(p)-1])
+	return find(filepath.Dir(p))
 }
 
 func isSrc(infos []os.FileInfo) bool {
@@ -59,4 +61,9 @@ func isSrc(infos []os.FileInfo) bool {
 	}
 
 	return false
+}
+
+func AppendEnvList(key, val string) error {
+	newVal := os.Getenv(key) + string(os.PathListSeparator) + val
+	return os.Setenv(key, newVal)
 }
