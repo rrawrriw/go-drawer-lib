@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -12,6 +13,8 @@ var (
 	NoSrc   = errors.New("No GOPATH directory found")
 )
 
+// Walk from the current directory backwards until we find a directory which
+// contains a src directory.
 func FindSrcDir(start string) (string, error) {
 
 	tmp := filepath.ToSlash(start)
@@ -63,7 +66,28 @@ func isSrc(infos []os.FileInfo) bool {
 	return false
 }
 
-func AppendEnvList(key, val string) error {
-	newVal := os.Getenv(key) + string(os.PathListSeparator) + val
-	return os.Setenv(key, newVal)
+func findPath(paths []string, p string) (int, bool) {
+	for pos, elem := range paths {
+		if elem == p {
+			return pos, true
+		}
+	}
+
+	return -1, false
+}
+
+// Make a new PATH string, therefor remove the old go bin path if it exists
+// and append the new go bin path at the end.
+func NewPath(pathEnv, o, n string) string {
+	vals := strings.Split(pathEnv, string(os.PathListSeparator))
+
+	pos, found := findPath(vals, o)
+	if found {
+		vals = append(vals[:pos], vals[pos+1:]...)
+	}
+
+	vals = append(vals, n)
+
+	return strings.Join(vals, string(os.PathListSeparator))
+
 }

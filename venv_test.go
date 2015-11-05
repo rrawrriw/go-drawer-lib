@@ -53,21 +53,12 @@ func Test_FindSrcDir(t *testing.T) {
 	}
 }
 
-func Test_AppendEnvList(t *testing.T) {
-	p := path.Join("blub", "blubber")
-	err := os.Setenv("TESTING", p)
-	if err != nil {
-		t.Fatal(err)
-	}
+func Test_ReplaceBinPath(t *testing.T) {
+	p := "/a/b:/c/d/:/v:a/b"
 
-	p2 := path.Join("bu", "hhhh")
-	err = AppendEnvList("TESTING", p2)
-	if err != nil {
-		t.Fatal(err)
-	}
+	r := NewPath(p, "/a/b", "/blub/blob")
+	expect := "/c/d/:/v:a/b:/blub/blob"
 
-	r := os.Getenv("TESTING")
-	expect := p + string(os.PathListSeparator) + p2
 	if expect != r {
 		t.Fatal("Expect", expect, "was", r)
 	}
